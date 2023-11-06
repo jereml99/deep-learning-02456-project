@@ -5,14 +5,25 @@ Created on Mon Nov  6 14:06:45 2023
 @author: Ila
 """
 
+
+"""
+ToDo: 
+    - is the rotation part needed? 
+        - if so, figure out a way for resizing as it needes to be done afterwards. 
+          (think about the inputs of the img_resizer)
+"""
+
+
 import glob
 import os
-import io
 import random
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import imread
 from matplotlib.pyplot import imshow
-from skimage.transform import resize
+
+
+from DataHandler import DataHandler
+data_handler = DataHandler()
 
 
 def show_comparison(original, modified, modified_name):
@@ -23,10 +34,10 @@ def show_comparison(original, modified, modified_name):
     ax2.imshow(modified)
     ax2.set_title(modified_name)
     ax2.axis('off')
-    io.show()
+    
+    
 
-
-""" Data Prep """
+""" read data """
 # read a small subset of the data
 in_dir = 'labeled_data_sample/'
 types = ('*.png', '*.jpg')
@@ -50,34 +61,27 @@ plt.title('random image from the loaded data')
 imshow(data[rdn])
 
 # check the image sizes 
-image_shapes = []
-for img in data:
-    img_size = [img.shape[0], img.shape[1]]
-    if img_size not in image_shapes:
-        image_shapes.append(img_size)
-print(F"available image shapes: {image_shapes}")
+data_handler.get_img_sizes(data)
 
 
-# image re-sizing  
-def img_resizer(img_list, new_height, new_width):
-    resized_imgs = []
-    for img in img_list:
-        image_new_size = (new_height, new_width, 3)
-        resized_img = resize(img, output_shape=image_new_size, mode='reflect', anti_aliasing=True)
-        resized_imgs.append(resized_img)
-    return resized_imgs
+""" image rotation """ 
+rotated_data = data_handler.img_rotater(data)
 
+# show the result from a random image
+rand_idx = random.randint(0, len(rotated_data))
+show_comparison(data[rand_idx], rotated_data[rand_idx], 'rotated')
+
+# re-check the image sizes
+data_handler.get_img_sizes(rotated_data)
+
+
+""" resize image """  
 new_height = 360
 new_width = 640
-resized_data = img_resizer(data, new_height, new_width)
+resized_data = data_handler.img_resizer(rotated_data, new_height, new_width)
 
-# re-check the image sizes 
-new_image_shapes = []
-for img in resized_data:
-    img_size = [img.shape[0], img.shape[1]]
-    if img_size not in new_image_shapes:
-        new_image_shapes.append(img_size)
-print(F"new available image shapes: {new_image_shapes}")
+# re-check the image sizes
+data_handler.get_img_sizes(resized_data)
 
 
 
