@@ -18,6 +18,7 @@ import glob
 import os
 import random
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.pyplot import imread
 from matplotlib.pyplot import imshow
 
@@ -34,41 +35,38 @@ def show_comparison(original, modified, modified_name):
     ax2.imshow(modified)
     ax2.set_title(modified_name)
     ax2.axis('off')
-    
+    plt.show()
     
 
 """ read data """
 # read a small subset of the data
-in_dir = 'labeled_data_sample/'
-types = ('*.png', '*.jpg')
-all_images = []
-for img_type in types:
-    all_images.extend(glob.glob(in_dir + img_type))
+in_dir = 'data_samples/*.npy'
+npy_files = glob.glob(in_dir)
+
     
 data = []
 # store the data in a list 
-for img_idx in all_images:
-    name_no_ext = os.path.splitext(img_idx)[0]
-    name_ext = os.path.splitext(img_idx)[1]
-
-    img = imread(f"{name_no_ext}{name_ext}")
-    data.append(img)
+for file_name in npy_files:
+    array = np.load(file_name)
+    data.append(array)
 
 # show a random image from the loaded data
-rdn = random.randint(0, len(data))
+rdn = random.randint(0, len(data)-1)
 plt.figure()
 plt.title('random image from the loaded data')
 imshow(data[rdn])
+plt.show()
+
 
 # check the image sizes 
 data_handler.get_img_sizes(data)
-
+data_handler.show_image_with_classes(data[rdn])
 
 """ image rotation """ 
 rotated_data = data_handler.img_rotater(data)
 
 # show the result from a random image
-rand_idx = random.randint(0, len(rotated_data))
+rand_idx = random.randint(0, len(rotated_data)-1)
 show_comparison(data[rand_idx], rotated_data[rand_idx], 'rotated')
 
 # re-check the image sizes
@@ -80,8 +78,9 @@ new_height = 360
 new_width = 640
 resized_data = data_handler.img_resizer(rotated_data, new_height, new_width)
 
-# re-check the image sizes
+show_comparison(data[rand_idx], resized_data[rand_idx], 'resized')
 data_handler.get_img_sizes(resized_data)
+
 
 
 
