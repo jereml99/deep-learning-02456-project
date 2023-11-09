@@ -8,7 +8,7 @@ import glob
 
 from dataset import CustomDataset
 
-SAMPLES_DIR = "data_samples/*.npy"
+SAMPLES_DIR = "data_samples"
 
 class Deeplab(pl.LightningModule):
     def __init__(self, num_classes):
@@ -30,7 +30,12 @@ class Deeplab(pl.LightningModule):
         return optimizer
 
     def train_dataloader(self):
-        samples = glob.glob(SAMPLES_DIR)
+        samples = glob.glob(SAMPLES_DIR+"/Train/*.npy")
+        dataset = CustomDataset(numpy_files=samples)
+        return DataLoader(dataset, batch_size=4, shuffle=True)
+    
+    def test_dataloader(self):
+        samples = glob.glob(SAMPLES_DIR+"/Test/*.npy")
         dataset = CustomDataset(numpy_files=samples)
         return DataLoader(dataset, batch_size=4, shuffle=True)
     
@@ -41,7 +46,7 @@ class Deeplab(pl.LightningModule):
         self.freeze()
 
         # Get a sample batch from the validation dataset
-        val_loader = self.train_dataloader()  # TODO use validation data loader
+        val_loader = self.test_dataloader()
         batch = next(iter(val_loader))
         images, masks = batch
         
