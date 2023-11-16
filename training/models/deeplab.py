@@ -23,6 +23,13 @@ class Deeplab(pl.LightningModule):
         self.log('train_loss', loss)
         return loss
 
+    def validation_step(self, batch, batch_idx):
+        images, masks = batch
+        outputs = self(images)
+        loss = F.cross_entropy(outputs, masks)
+        self.log('validation_loss', loss)
+        return loss
+
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
         return optimizer
