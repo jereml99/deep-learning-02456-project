@@ -14,12 +14,11 @@ from tqdm import tqdm
 import torch.nn as nn 
 import torch.optim as optim
 from model import UNet
-#from utils import (
-#    load_checkpoints, 
-#    save_checkpoints,
-#    get_loaders,
-#    check_accuracy, 
-#    save_predictions_as_imgs)
+from utils import (load_checkpoints, 
+                   save_checkpoints,
+                   get_loaders,
+                   check_accuracy, 
+                   save_predictions_as_imgs)
 
 
 """ Hyperparametrs etc """
@@ -107,7 +106,6 @@ def main():
     
     train_loader, val_loader = get_loaders(
         TRAIN_IMG_DIR,
-        VAL_IMG_DIR,
         BATCH_SIZE, 
         train_transform,
         val_transform,
