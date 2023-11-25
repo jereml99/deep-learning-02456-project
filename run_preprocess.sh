@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #join all images
-echo "I am preprocessing all data"
+echo "I am preprocessing all data with cropped landscapes, correct arrays"
 python3 data_preparing
 
 #crop and resize all images to 256,256 - first dataset

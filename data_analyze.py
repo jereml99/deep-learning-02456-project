@@ -1,13 +1,11 @@
 import numpy as np
-import cv2
 import os
-import random
 from PIL import Image
 from IPython.display import display
 import matplotlib.pyplot as plt
 
 #check image size for three folders: orange_3_doors, black_5_doors, landscapes
-folders_paths = ['/Users/aleksandra/Desktop/carseg_data/images/orange_3_doors/no_segmentation', '/Users/aleksandra/Desktop/carseg_data/images/black_5_doors/no_segmentation', '/Users/aleksandra/Desktop/carseg_data/images/photo/no_segmentation' ,'/Users/aleksandra/Desktop/carseg_data/landscapes']
+folders_paths = ['./carseg_data/images/orange_3_doors/no_segmentation', './carseg_data/images/black_5_doors/no_segmentation', './carseg_data/images/photo/no_segmentation' ,'./carseg_data/landscapes']
 
 for folder_path in folders_paths:
     # Set to store unique image dimensions for the current folder
@@ -72,6 +70,14 @@ def display_class_maps(mask_folder):
             plt.show()
 
 # Specify the output folder containing .npy files
-mask_folder = '/Users/aleksandra/Downloads/arrays'
+mask_folder = './carseg_data/arrays'
 
-display_class_maps(mask_folder)
+#display_class_maps(mask_folder)
+
+# Conclusions:
+# masks should be corrected because we see single pixels marking masks that are not part of the masks
+# all .npy files are resized to the size (256, 256), we don't know what was the method of resizing, so we are not able to resize images
+# we can use only images from photo's folder, because those files are in the correct size along with masks
+# we should take synthetic objects from black_5_doors and orange_3_doors and put on landscapes 
+
+# we have 139 images in 'photo' folder in size (256,256)
