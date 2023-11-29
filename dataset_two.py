@@ -1,90 +1,147 @@
-
 import os
+import shutil
 import numpy as np
-from PIL import Image, ImageEnhance, ImageOps
+from PIL import Image
 import random
 import matplotlib.colors as mcolors
 
-
-## PREPARE SYNTETIC DATA 
-input_folder = './carseg_data/arrays'
+# Paths to folders
+input_folder = './carseg_data/arrays_corrected'
 landscapes_folder = './carseg_data/cropped_landscapes'
 output_folder_combined = './carseg_data/combined_images'
-output_folder_masks = './carseg_data/resized_masks'
 
-# Create output folders if they don't exist
+# Create output folders if they do not exist
 os.makedirs(output_folder_combined, exist_ok=True)
-os.makedirs(output_folder_masks, exist_ok=True)
 
 def adjust_hue(image, hue_change):
-    # Convert the image to HSV
+    # Convert the image to HSV format and modify the hue
     hsv_image = mcolors.rgb_to_hsv(image/255.0)
-    # Adjust the hue
     hsv_image[..., 0] = (hsv_image[..., 0] + hue_change) % 1.0
-    # Convert back to RGB
-    rgb_image = mcolors.hsv_to_rgb(hsv_image)
-    return (rgb_image * 255).astype(np.uint8)
+    return (mcolors.hsv_to_rgb(hsv_image) * 255).astype(np.uint8)
 
-def combine_with_random_background(transparent_car_image, landscapes_folder):
-    # Get a list of all landscape images
-    landscape_images = [f for f in os.listdir(landscapes_folder) if f.endswith(('.png', '.jpg'))]
+def create_mask_with_segments(image_data, segmentation_map):
+    # Set all non-zero values in the segmentation map to 255
+    segmentation_map = np.where(segmentation_map != 0, 255, segmentation_map)
+
+    # Create mask with segments
+    mask_with_segments = np.zeros((image_data.shape[0], image_data.shape[1], 4), dtype=np.uint8)
     
-    # Randomly select a landscape image
-    selected_landscape = random.choice(landscape_images)
-    landscape_path = os.path.join(landscapes_folder, selected_landscape)
-    landscape_image = Image.open(landscape_path)
+    # Assign RGB values from the original image
+    mask_with_segments[..., :3] = image_data
 
-    # Resize the landscape to match the car image dimensions
-    landscape_image = landscape_image.resize(transparent_car_image.size)
+    # Assign modified segmentation map to the fourth channel
+    mask_with_segments[..., 3] = segmentation_map
 
-    # Combine the transparent car image with the landscape
-    combined_image = Image.alpha_composite(landscape_image.convert('RGBA'), transparent_car_image)
+    return mask_with_segments
+
+def combine_with_random_background(mask_image_pil, landscapes_folder):
+    # Combine with a random background
+    landscape_images = [f for f in os.listdir(landscapes_folder) if f.endswith(('.png', '.jpg'))]
+    landscape_image = Image.open(os.path.join(landscapes_folder, random.choice(landscape_images)))
+    landscape_image = landscape_image.resize(mask_image_pil.size)
+
+    # Ensure the background image is in RGB format
+    if landscape_image.mode != 'RGB':
+        landscape_image = landscape_image.convert('RGB')
+
+    # Use the fourth channel (alpha) of the mask for blending
+    combined_image = Image.composite(mask_image_pil, landscape_image, mask_image_pil.split()[3])
+
+    # Ensure the combined image is in RGB format
+    if combined_image.mode != 'RGB':
+        combined_image = combined_image.convert('RGB')
 
     return combined_image
 
-hue_change = 0
-hue_increment = 0.05  # Adjust this value to control the hue change for each image
+# List of hue changes
+hue_changes = np.linspace(0, 1, 20, endpoint=False)  # 20 different colors
+hue_index = 0
 
-# Iterate through all .npy files in the input folder
 for file_name in os.listdir(input_folder):
     if file_name.endswith('.npy'):
         file_path = os.path.join(input_folder, file_name)
-        
-        # Load the data from the file
         data = np.load(file_path)
-        
-        # Split the data into image and segmentation map
-        image_data = data[..., :3]  # The first 3 channels are the image data (RGB)
-        segmentation_map = data[..., 3]  # The fourth channel is the segmentation map
 
-        # Resize the segmentation map
-        resized_segmentation_map = Image.fromarray(segmentation_map).resize((256, 256), Image.NEAREST)
-        resized_segmentation_map = np.array(resized_segmentation_map)
+        image_data, segmentation_map = data[..., :3], data[..., 3]
 
-        # Save the resized segmentation map
-        mask_file_path = os.path.join(output_folder_masks, file_name)
-        np.save(mask_file_path, resized_segmentation_map)
+        # Modify hue of segments using the next value from the list
+        hue_change = hue_changes[hue_index]
+        image_data = adjust_hue(image_data, hue_change)
 
-        # Prepare car segments
-        car_segments_mask = np.isin(resized_segmentation_map, np.arange(10, 91))
+        # Create mask with segments
+        mask_with_segments = create_mask_with_segments(image_data, segmentation_map)
 
-        # Isolate car segments from the image
-        car_image = np.zeros_like(image_data)
-        car_image[car_segments_mask] = image_data[car_segments_mask]
+        # Convert to PIL format and combine with background
+        mask_image_pil = Image.fromarray(mask_with_segments)
+        combined_image = combine_with_random_background(mask_image_pil, landscapes_folder)
+        combined_image.save(os.path.join(output_folder_combined, file_name.replace('.npy', '.png')))
 
-        # Adjust the hue of the car segments
-        adjusted_car_image = adjust_hue(car_image, hue_change)
-        hue_change = (hue_change + hue_increment) % 1.0
+        # Update hue change index
+        hue_index = (hue_index + 1) % len(hue_changes)
 
-        # Convert the adjusted car segments to PIL image format with a transparent background
-        transparent_background = np.zeros((adjusted_car_image.shape[0], adjusted_car_image.shape[1], 4), dtype=np.uint8)
-        transparent_background[..., :3] = adjusted_car_image
-        transparent_background[..., 3] = (resized_segmentation_map * (car_segments_mask * 255)).astype(np.uint8)
-        car_image_transparent_pil = Image.fromarray(transparent_background)
+### PREPARE THE DATASET
+training_two = './carseg_data/training_two'
 
-        # Combine the car image with a random landscape background
-        combined_image = combine_with_random_background(car_image_transparent_pil, landscapes_folder)
+def copy_folder(src, dst):
+    if os.path.exists(dst):
+        print("The output folder exists.")
+    else:
+        # Copy the folder with all its content
+        shutil.copytree(src, dst)
+        print(f"The folder '{src}' was copied to location '{dst}'")
 
-        # Save the combined image
-        combined_image_filename = file_name.replace('.npy', '.png')
-        combined_image.save(os.path.join(output_folder_combined, combined_image_filename))
+def prepare_dataset(images_folder, input_folder, output_folder):
+    # Paths for the output subfolders
+    train_img_path = os.path.join(output_folder, 'train', 'img')
+    train_arrays_path = os.path.join(output_folder, 'train', 'arrays')
+    val_img_path = os.path.join(output_folder, 'val', 'img')
+    val_arrays_path = os.path.join(output_folder, 'val', 'arrays')
+
+    # Create necessary directories
+    os.makedirs(train_img_path, exist_ok=True)
+    os.makedirs(train_arrays_path, exist_ok=True)
+    os.makedirs(val_img_path, exist_ok=True)
+    os.makedirs(val_arrays_path, exist_ok=True)
+
+    # Get all image and mask filenames
+    images = [f for f in os.listdir(images_folder) if f.endswith(('.png', '.jpg'))]
+    masks = [f for f in os.listdir(input_folder) if f.endswith('.npy')]
+
+    # Filter out the common filenames
+    common_filenames = set([os.path.splitext(f)[0] for f in images]) & set([os.path.splitext(f)[0] for f in masks])
+
+    # Function to check and copy the corresponding image file
+    def copy_image_file(src_folder, dest_folder, filename):
+        for ext in ['.jpg', '.png']:
+            if os.path.exists(os.path.join(src_folder, filename + ext)):
+                shutil.copy(os.path.join(src_folder, filename + ext), dest_folder)
+                break
+
+    # Split data into training and validation sets (5% for validation)
+    val_filenames = set(np.random.choice(list(common_filenames), size=int(len(common_filenames) * 0.05), replace=False))
+    train_filenames = common_filenames - val_filenames
+
+    # Copy files to their respective directories
+    for filename in train_filenames:
+        copy_image_file(images_folder, train_img_path, filename)
+        shutil.copy(os.path.join(input_folder, filename + '.npy'), train_arrays_path)
+
+    for filename in val_filenames:
+        copy_image_file(images_folder, val_img_path, filename)
+        shutil.copy(os.path.join(input_folder, filename + '.npy'), val_arrays_path)
+
+    copy_folder('./carseg_data/test', './carseg_data/training_two/test')
+
+    return "Dataset successfully prepared."
+
+# Prepare the dataset
+prepare_dataset(output_folder_combined, input_folder, training_two)
+
+
+#cleaning
+
+shutil.rmtree(output_folder_combined)
+shutil.rmtree(input_folder)
+shutil.rmtree(landscapes_folder)
+shutil.rmtree('./carseg_data/all_images')
+shutil.rmtree('./carseg_data/test')

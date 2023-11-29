@@ -2,17 +2,15 @@
 
 #join all images
 echo "I am preprocessing all data with cropped landscapes, correct arrays"
-python3 data_preparing
+python3 ./deep-learning-02456-project/data_preparing.py
 
-#crop and resize all images to 256,256 - first dataset
+#synthetic dataset with 20 colours of synthetic cars
 echo "I am preparing the first dataset"
-python3 dataset_one.py
+python3 ./deep-learning-02456-project/dataset_one.py
 
-#resize landscapes and prepare synthetic data
+#synthetic dataset with 10 colours of synthetic cars
 echo "I am preparing the second dataset"
-python3 dataset_two.py
+python3 ./deep-learning-02456-project/dataset_two.py
 
-#echo "I am preparing the third dataset"
-#python3 dataset_three.py
 
 

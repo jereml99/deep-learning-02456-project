@@ -4,6 +4,7 @@ import numpy as np
 from PIL import Image
 import cv2
 
+
 ## Create one dataset with all images without segmentation
 
 main_directory = './carseg_data/images'
@@ -28,6 +29,44 @@ for folder in os.listdir(main_directory):
 
 print("I have prepared folder (with) all_images.")
 
+
+
+## Create test folder and move files to this folder 
+print('I am creating the test dataset.')
+
+#test_folder = './carseg_data/trening/test'
+input_arrays_folder = './carseg_data/arrays'
+test_arrays = './carseg_data/test/arrays'
+test_images = './carseg_data/test/img'
+
+
+
+def create_test_folder(test_arrays, test_images, arrays_folder, images_folder):
+
+    if not os.path.exists(test_images):
+        os.makedirs(test_images)
+    if not os.path.exists(test_arrays):
+        os.makedirs(test_arrays)
+
+    for i in range(1, 31):
+        image_name = f"photo_{i:04d}.jpg"
+        src_image_path = os.path.join(images_folder, image_name)
+        dst_image_path = os.path.join(test_images, image_name)
+        print(src_image_path)
+        if os.path.exists(src_image_path):
+            shutil.move(src_image_path, dst_image_path)
+
+    for i in range(1, 31):
+        array_name = f"photo_{i:04d}.npy"
+        src_array_path = os.path.join(arrays_folder, array_name)
+        dst_array_path = os.path.join(test_arrays, array_name)
+
+        print(src_array_path)
+        if os.path.exists(src_array_path):
+            shutil.move(src_array_path, dst_array_path) 
+
+
+create_test_folder(test_arrays, test_images, input_arrays_folder, result_directory)
 
 
 ## PREPARE LANDSCAPES
@@ -106,8 +145,12 @@ def process_masks(input_folder, output_folder):
 
 
 # Defining the paths for the input and output folders
-input_arrays_folder = './carseg_data/arrays'
 output_arrays_folder = './carseg_data/arrays_corrected'
 # Processing the masks
 process_masks(input_arrays_folder, output_arrays_folder)
 print("I have corrected the arrays.")
+
+
+
+
+
