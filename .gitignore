@@ -163,3 +163,5 @@ carseg_data
 lightning_logs
 car-segmentation
 wandb
+data/
+data_two/

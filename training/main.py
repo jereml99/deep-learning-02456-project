@@ -11,23 +11,22 @@ from test_utils import test_model
 from models.unet import UNet
 
 
-SAMPLES_DIR = "data_samples"
+SAMPLES_DIR = "data_two"
 
 def train_dataloader():
-    samples = glob.glob(SAMPLES_DIR+"/Train/*.npy")
+    samples = glob.glob(SAMPLES_DIR+"/train/**/*.npy")
     dataset = CustomDataset(numpy_files=samples)
-    return DataLoader(dataset, batch_size=8, shuffle=True)
+    return DataLoader(dataset, batch_size=8, shuffle=True, drop_last=True)
 
 def validation_dataloader():
-    samples = glob.glob(SAMPLES_DIR+"/Validation/*.npy")
+    samples = glob.glob(SAMPLES_DIR+"/val/**/*.npy")
     dataset = CustomDataset(numpy_files=samples)
-    return DataLoader(dataset, batch_size=8, shuffle=True)
+    return DataLoader(dataset, batch_size=8, shuffle=True,  drop_last=True)
 
 def test_dataloader():
-    samples = glob.glob(SAMPLES_DIR+"/Test/*.npy")
+    samples = glob.glob(SAMPLES_DIR+"/test/**/*.npy")
     dataset = CustomDataset(numpy_files=samples)
-    return DataLoader(dataset, batch_size=8, shuffle=False)
-
+    return DataLoader(dataset, batch_size=8, shuffle=False,  drop_last=True)
 
 def main():
     wandb_logger = WandbLogger(project='car-segmentation')
