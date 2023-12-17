@@ -63,7 +63,7 @@ def create_test_folder(test_arrays, test_images, arrays_folder, images_folder):
 
         print(src_array_path)
         if os.path.exists(src_array_path):
-            shutil.move(src_array_path, dst_array_path) 
+            shutil.copy(src_array_path, dst_array_path) 
 
 
 create_test_folder(test_arrays, test_images, input_arrays_folder, result_directory)
