@@ -12,20 +12,20 @@ from test_utils import test_model
 from models.unet import UNet
 
 
-SAMPLES_DIR = "data"
+SAMPLES_DIR = "data_samples"
 
 def train_dataloader():
-    samples = glob.glob(SAMPLES_DIR+"/train/**/*.npy")
+    samples = glob.glob(SAMPLES_DIR+"/train/**/*.npy", recursive=True)
     dataset = CustomDataset(numpy_files=samples)
-    return DataLoader(dataset, batch_size=8, shuffle=True, drop_last=True)
+    return DataLoader(dataset, batch_size=16, shuffle=True, drop_last=True)
 
 def validation_dataloader():
-    samples = glob.glob(SAMPLES_DIR+"/val/**/*.npy")
+    samples = glob.glob(SAMPLES_DIR+"/val/**/*.npy", recursive=True)
     dataset = CustomDataset(numpy_files=samples)
-    return DataLoader(dataset, batch_size=8, shuffle=True,  drop_last=True)
+    return DataLoader(dataset, batch_size=16, shuffle=True,  drop_last=True)
 
 def test_dataloader():
-    samples = glob.glob(SAMPLES_DIR+"/test/**/*.npy")
+    samples = glob.glob(SAMPLES_DIR+"/test/**/*.npy", recursive=True)
     dataset = CustomDataset(numpy_files=samples)
     return DataLoader(dataset, batch_size=8, shuffle=False,  drop_last=True)
 
