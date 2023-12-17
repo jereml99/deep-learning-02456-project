@@ -1,5 +1,6 @@
 import wandb
 import torch
+import torchmetrics
 import numpy as np
 
 def calculate_iou(preds, labels):
@@ -51,6 +52,7 @@ def create_mask_dictionary(mask_tensor):
 def test_model(model, test_loader):
     model.eval()
     all_ious = []
+    all_dice = []
 
     with torch.no_grad():
         for batch_idx, (images, masks) in enumerate(test_loader):
@@ -70,8 +72,13 @@ def test_model(model, test_loader):
                 })
 
             all_ious.append(calculate_iou(preds, masks))
+            all_dice.append(torchmetrics.functional.dice(preds, masks))
 
     mean_iou = np.mean(all_ious)
-    wandb.log({"mean_test_iou": mean_iou})
+    mean_dice = np.mean(all_dice)
+    wandb.log({
+        "mean_test_iou": mean_iou,
+        "dice_score": mean_dice})
+
 
     return mean_iou
