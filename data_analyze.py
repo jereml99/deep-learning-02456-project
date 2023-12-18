@@ -5,7 +5,7 @@ from IPython.display import display
 import matplotlib.pyplot as plt
 
 #check image size for three folders: orange_3_doors, black_5_doors, landscapes
-folders_paths = ['./carseg_data/images/orange_3_doors/no_segmentation', './carseg_data/images/black_5_doors/no_segmentation', './carseg_data/images/photo/no_segmentation' ,'./carseg_data/landscapes']
+folders_paths = ['../carseg_data/images/orange_3_doors/no_segmentation', '../carseg_data/images/black_5_doors/no_segmentation', '../carseg_data/images/photo/no_segmentation' ,'../carseg_data/landscapes']
 
 for folder_path in folders_paths:
     # Set to store unique image dimensions for the current folder
@@ -79,5 +79,4 @@ mask_folder = './carseg_data/arrays'
 # all .npy files are resized to the size (256, 256), we don't know what was the method of resizing, so we are not able to resize images
 # we can use only images from photo's folder, because those files are in the correct size along with masks
 # we should take synthetic objects from black_5_doors and orange_3_doors and put on landscapes 
-
 # we have 139 images in 'photo' folder in size (256,256)
