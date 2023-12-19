@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader
 
 from test_utils import test_model
 from models.unet import UNet
+from models.unet_resnet34 import UNetResNet
 
 
 SAMPLES_DIR = "data_samples"
@@ -33,6 +34,7 @@ def test_dataloader():
 models = {
     "Deeplab_restnet_50" : Deeplab_RestNet_101(num_classes=9),
     "Unet": UNet(in_channels=3, out_channels=10),
+    "UNetResNet": UNetResNet(in_channels=3, out_channels=10),
     "Deeplab_restnet_101": Deeplab_RestNet_101(num_classes=9)
 }
 
